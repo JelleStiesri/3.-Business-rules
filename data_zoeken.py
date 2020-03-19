@@ -78,7 +78,7 @@ def join_profses():
 
 
 
-join_profses()
+#join_profses()
 
 def cat():
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
@@ -96,13 +96,19 @@ def cat():
     volwas = 0
     baby = 0
     niks = 0
+    cat = 0
 
     for row in records:
         print('\nId = ', row[0],)
         print('Naam = ', row[1],)
         target = row[7]
+        cate = row[4]
         print('Target = ', target)
-        if target == 'Vrouw':
+        print('cat = ',cate)
+
+        if cate == 'Huishouden':
+            cat += 1
+        if target == 'Meisje':
             man += 1
         elif target == 'Vrouwen':
             vrouw += 1
@@ -120,5 +126,31 @@ def cat():
         #print('Target = ', row[7])
     print('man {}, vrouw {}, kind {}, volwas {}, baby {} totaal {}'.format(man,vrouw,kind,volwas,baby,man+vrouw+kind+volwas+baby))
     print('niks',niks, man+vrouw+kind+volwas+baby+niks)
+    print('cat', cat)
+cat()
 
-#cat()
+
+def prod_prof(userlist):
+    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
+    cursor = c.cursor()
+
+    code2 = """select ppv.profid, ppv.prodid, prof.segment, prod.name, prod.category, prod.targetaudience
+        from profiles_previously_viewed as ppv inner join profiles as prof on ppv.profid = prof.id inner join products as prod on ppv.prodid = prod.id
+        where profid ='5c47034ed8f58d0001706b84'
+        order by profid desc,
+        prodid desc """
+
+    input('doorgaan')
+    ding = "5c47034ed8f58d0001706b84"
+
+    cursor.execute("""select ppv.profid, ppv.prodid, prof.segment, prod.name, prod.category, prod.targetaudience
+            from profiles_previously_viewed as ppv inner join profiles as prof on ppv.profid = prof.id inner join products as prod on ppv.prodid = prod.id
+            where profid =%s
+            order by profid desc,
+            prodid desc """,(ding,))
+
+    table = cursor.fetchall()
+    #where segment = 'buyer' or segment = 'BUYER'
+
+    for row in table:
+        print('\nProfId = ', row[0],'\nProdId = ', row[1],'\nSegment = ', row[2],'\nNaam = ', row[3],'\nCat = ', row[4],'\nTarget = ', row[5],'\nCount = ' )

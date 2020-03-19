@@ -1,48 +1,26 @@
 import psycopg2
 
 
-def maak_groepen():
+
+
+def sqlload(id,group):
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
     cursor = c.cursor()
-    count = 0
-
-    code1 = """select category, targetaudience from products where category != '' and targetaudience != '' AND targetaudience != 'Grootverpakking'AND targetaudience != 'zwangere vrouw'AND targetaudience != 'Unisex'AND targetaudience != '65+'AND targetaudience != 'Baby'AND targetaudience != 'Mannen/vrouwen'AND targetaudience != 'Vrouw'"""
-
-
-    cursor.execute(code1)
-    table = cursor.fetchall()
-    catlist = []
-    targetlist = []
-
-    for row in table:
-        cat = row[0]
-        target = row[1]
-        if cat not in catlist:
-            catlist.append(cat)
-        if target not in targetlist:
-            targetlist.append(target)
-        count += 1
-    #print(count,'items')
-    #print(catlist)
-    #print('\n',targetlist)
-    groups = []
-    for target in targetlist:
-        for cat in catlist:
-            groep = '{}_{}'.format(target,cat)
-            #print(groep)
-            groups.append(groep)
-    #print(groups)
-    #print(len(catlist),len(targetlist),len(groups))
-    return groups
-
-
-#maak_groepen()
+    code = id
+    groep = group
+    cursor.execute("insert into groups values (%s,%s)", (code,groep,))
+    c.commit()
+    c.close
+    print('klaar')
+#sqlload()
 
 def user_groups(userlist):
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
     cursor = c.cursor()
-
+    group_dict = {}
+    count = 0 #alleen om te kijken hoe snel de tests gaan
     for user in userlist:
+        count += 1
         print('===============================')
         cursor.execute("""select ppv.profid, ppv.prodid, prof.segment, prod.name, prod.category, prod.targetaudience
                 from profiles_previously_viewed as ppv inner join profiles as prof on ppv.profid = prof.id inner join products as prod on ppv.prodid = prod.id 
@@ -57,47 +35,57 @@ def user_groups(userlist):
 
             target = product[5]
             cat = product[4]
-            if target == None or cat == None or target == 'Grootverpakking'or target == 'zwangere vrouw'or target == 'Unisex'or target == '65+'or target == 'Baby'or target == 'Mannen/vrouwen'or target == 'Vrouw':
-                continue #slaat lege targets en cats over en targets met maar enkele items
             if target in target_dict:
                 target_dict[target] +=1
             else:
-                target_dict[target] = 1
+                if target == None or target == 'Grootverpakking' or target == 'zwangere vrouw' or target == 'Unisex' or target == '65+' or target == 'Baby' or target == 'Mannen/vrouwen' or target == 'Vrouw':
+                    pass  # slaat lege targets over en targets met maar enkele items
+                else:
+                    target_dict[target] = 1
             if cat in cat_dict:
                 cat_dict[cat] += 1
             else:
-                cat_dict[cat] = 1
-        try:
-            print('targetdict:', target_dict)
-            print('catdict:', cat_dict)
-            biggest_target = max(target_dict, key=target_dict.get) #verkrijg meest gekochte target
-            biggest_cat = max(cat_dict, key=cat_dict.get) #verkrijg meest gekochte category
-            group = '{}_{}'.format(biggest_target,biggest_cat)
-            print(group)
-        except ValueError:
-            print('ERROOOOR')
+                if cat == None or cat == 'Folder artikelen' or cat == 'op=opruiming' or cat == 'Nieuw' or cat == '50% korting' or cat == 'Opruiming' or cat == 'Cadeau ideeën':
+                    pass  # slaat lege targets en cats over en targets met maar enkele items
+                else:
+                    cat_dict[cat] = 1
+        print('targetdict:', target_dict)
+        print('catdict:', cat_dict)
+        if target_dict == {}:
+            biggest_target = 'Volwassenen' #standaard, als targetdict leeg is
+        else:
+            biggest_target = max(target_dict, key=target_dict.get)  # verkrijg meest gekochte target
+        if cat == {}:
+            biggest_target = 'Gezond & verzorging' # standaard (meest gebruikt), als catdict leeg is
+        else:
+            biggest_cat = max(cat_dict, key=cat_dict.get)  # verkrijg meest gekochte category
 
-
-
-
+        group = '{}_{}'.format(biggest_target,biggest_cat)
+        print(group)
+        sqlload(user,group)
+        """if group in group_dict:
+            group_dict[group] += 1
+        else:
+            group_dict[group] = 1
+    print('',group_dict)"""
 
 def userlijst():
+    group_tabel()
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
     cursor = c.cursor()
     userlist = []
-    cursor.execute("""select id from profiles where segment = 'buyer' or segment = 'BUYER' limit 1000""")
+    cursor.execute("""select id from profiles where segment = 'buyer' or segment = 'BUYER' limit 10""")
     tabel = cursor.fetchall()
     for row in tabel:
         userlist.append(row[0])
     print('lente userlijst:', len(userlist))
-    print(userlist)
+    #print(userlist)
     #input('doorgaan?')
 
     user_groups(userlist)
 
 userlijst()
 
-# ding = "5c47034ed8f58d0001706b84"
 
 
 
@@ -106,75 +94,40 @@ userlijst()
 
 
 
-def prod_prof(userlist):
+
+
+
+
+def maak_groepen(): #test functie om groepen te maken
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
     cursor = c.cursor()
-
-    code2 = """select ppv.profid, ppv.prodid, prof.segment, prod.name, prod.category, prod.targetaudience
-        from profiles_previously_viewed as ppv inner join profiles as prof on ppv.profid = prof.id inner join products as prod on ppv.prodid = prod.id 
-        where profid ='5c47034ed8f58d0001706b84'
-        order by profid desc,
-        prodid desc """
-
-    input('doorgaan')
-    ding = "5c47034ed8f58d0001706b84"
-
-    cursor.execute("""select ppv.profid, ppv.prodid, prof.segment, prod.name, prod.category, prod.targetaudience
-            from profiles_previously_viewed as ppv inner join profiles as prof on ppv.profid = prof.id inner join products as prod on ppv.prodid = prod.id 
-            where profid =%s
-            order by profid desc,
-            prodid desc """,(ding,))
-
+    code1 = """select category, targetaudience from products where category != '' and targetaudience != '' AND targetaudience != 'Grootverpakking'AND targetaudience != 'zwangere vrouw'AND targetaudience != 'Unisex'AND targetaudience != '65+'AND targetaudience != 'Baby'AND targetaudience != 'Mannen/vrouwen'AND targetaudience != 'Vrouw'"""
+    cursor.execute(code1)
     table = cursor.fetchall()
-    #where segment = 'buyer' or segment = 'BUYER'
+    catlist = []
+    targetlist = []
 
     for row in table:
-        count += 1
-        print('\nProfId = ', row[0],'\nProdId = ', row[1],'\nSegment = ', row[2],'\nNaam = ', row[3],'\nCat = ', row[4],'\nTarget = ', row[5],'\nCount = ',count )
+        cat = row[0]
+        target = row[1]
+        if cat not in catlist:
+            catlist.append(cat)
+        if target not in targetlist:
+            targetlist.append(target)
+    groups = []
+    print(catlist)
+    for target in targetlist:
+        for cat in catlist:
+            groep = '{}_{}'.format(target,cat)
+            #print(groep)
+            groups.append(groep)
+    input(1)
+    return groups
+#maak_groepen()
 
 
 
 
-#prod_prof(1)
-
-def sqlload():
-    print(1)
 
 
 
-
-
-
-
-
-
-
-
-
-
-def tabelmaken():
-    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123') #TODO: edit this.
-    cur = c.cursor()
-
-    cur.execute("DROP TABLE IF EXISTS products CASCADE")
-    cur.execute("DROP TABLE IF EXISTS profiles CASCADE")
-    cur.execute("DROP TABLE IF EXISTS profiles_previously_viewed CASCADE")
-    cur.execute("DROP TABLE IF EXISTS sessions CASCADE")
-
-    # All product-related tables
-
-    cur.execute("""CREATE TABLE products
-                    (id VARCHAR PRIMARY KEY,
-                     name VARCHAR,
-                     brand VARCHAR,
-                     type VARCHAR,
-                     category VARCHAR,
-                     subcategory VARCHAR,
-                     subsubcategory VARCHAR,
-                     targetaudience VARCHAR,
-                     msrp INTEGER,
-                     discount INTEGER,
-                     sellingprice INTEGER,
-                     deal VARCHAR,
-                     description VARCHAR);""")
-#tabelmaken()
