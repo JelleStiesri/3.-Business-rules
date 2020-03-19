@@ -1,9 +1,42 @@
 import psycopg2
 
+def group_tabel():
+    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
+    cur = c.cursor()
+
+    cur.execute("DROP TABLE IF EXISTS groups CASCADE")
+
+    cur.execute("""CREATE TABLE groups
+                    (id VARCHAR PRIMARY KEY,
+                     groep VARCHAR);""")
+    c.commit()
+    c.close
+
+def recommendation_tabel():
+    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
+    cur = c.cursor()
+
+    cur.execute("DROP TABLE IF EXISTS rec_group CASCADE")
+
+    cur.execute("""CREATE TABLE rec_group 
+                    (groep VARCHAR PRIMARY KEY,
+                     prodid VARCHAR);""")
+    c.commit()
+    c.close
+recommendation_tabel()
+
+def pgload_group(group,prodid):
+    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
+    cursor = c.cursor()
+    prodid = id
+    groep = group
+    cursor.execute("insert into rec_group values (%s,%s)", (groep,prodid,))
+    c.commit()
+    c.close
+    print('klaar')
 
 
-
-def sqlload(id,group):
+def pgload_group(id,group):
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
     cursor = c.cursor()
     code = id
@@ -12,7 +45,7 @@ def sqlload(id,group):
     c.commit()
     c.close
     print('klaar')
-#sqlload()
+
 
 def user_groups(userlist):
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
@@ -62,7 +95,7 @@ def user_groups(userlist):
 
         group = '{}_{}'.format(biggest_target,biggest_cat)
         print(group)
-        sqlload(user,group)
+        pgload_group(user,group)
         """if group in group_dict:
             group_dict[group] += 1
         else:
