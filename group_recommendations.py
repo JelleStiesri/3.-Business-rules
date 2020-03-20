@@ -4,9 +4,7 @@ import psycopg2
 def recommendation_tabel(): #maakt een tabel met de recommendation per groep
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
     cur = c.cursor()
-
     cur.execute("DROP TABLE IF EXISTS rec_groep CASCADE")
-
     cur.execute("""CREATE TABLE rec_groep 
                     (groep VARCHAR PRIMARY KEY,
                      prodid VARCHAR);""")

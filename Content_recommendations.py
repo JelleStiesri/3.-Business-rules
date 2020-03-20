@@ -3,9 +3,7 @@ import psycopg2
 def prod_tabel(): #maakt de tabel aan met de producten en recomendations
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
     cur = c.cursor()
-
     cur.execute("DROP TABLE IF EXISTS rec_prod CASCADE")
-
     cur.execute("""CREATE TABLE rec_prod
                     (prodid VARCHAR PRIMARY KEY,
                      recid VARCHAR);""")

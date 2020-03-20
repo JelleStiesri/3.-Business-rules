@@ -3,15 +3,12 @@ import psycopg2
 def group_tabel(): #maakt de tabel aan met de users en groepen
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
     cur = c.cursor()
-
     cur.execute("DROP TABLE IF EXISTS groepen CASCADE")
-
     cur.execute("""CREATE TABLE groepen
                     (id VARCHAR PRIMARY KEY,
                      groep VARCHAR);""")
     c.commit()
     c.close
-
 
 def pgload_group(id,group):
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
@@ -20,7 +17,6 @@ def pgload_group(id,group):
     c.commit()
     c.close
     print('Inserted')
-
 
 def user_groups(userlist):
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')

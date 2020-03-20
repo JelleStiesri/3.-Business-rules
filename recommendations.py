@@ -29,7 +29,7 @@ def content():
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
     cur = c.cursor()
     prodid = input('Geef een Productnummer: ')
-    # gebruik bijvoorbeeld: 32520 om te testen
+    #gebruik bijvoorbeeld: 32520 om te testen
     cur.execute("""select recid from rec_prod
         where prodid =%s""", (prodid,))
     table = cur.fetchall()
