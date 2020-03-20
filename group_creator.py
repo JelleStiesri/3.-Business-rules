@@ -1,71 +1,46 @@
 import psycopg2
 
-def group_tabel():
+def group_tabel(): #maakt de tabel aan met de users en groepen
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
     cur = c.cursor()
 
-    cur.execute("DROP TABLE IF EXISTS groups CASCADE")
+    cur.execute("DROP TABLE IF EXISTS groepen CASCADE")
 
-    cur.execute("""CREATE TABLE groups
+    cur.execute("""CREATE TABLE groepen
                     (id VARCHAR PRIMARY KEY,
                      groep VARCHAR);""")
     c.commit()
     c.close
 
-def recommendation_tabel():
-    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
-    cur = c.cursor()
-
-    cur.execute("DROP TABLE IF EXISTS rec_group CASCADE")
-
-    cur.execute("""CREATE TABLE rec_group 
-                    (groep VARCHAR PRIMARY KEY,
-                     prodid VARCHAR);""")
-    c.commit()
-    c.close
-recommendation_tabel()
-
-def pgload_group(group,prodid):
-    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
-    cursor = c.cursor()
-    prodid = id
-    groep = group
-    cursor.execute("insert into rec_group values (%s,%s)", (groep,prodid,))
-    c.commit()
-    c.close
-    print('klaar')
-
 
 def pgload_group(id,group):
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
-    cursor = c.cursor()
-    code = id
-    groep = group
-    cursor.execute("insert into groups values (%s,%s)", (code,groep,))
+    cur = c.cursor()
+    cur.execute("insert into groepen values (%s,%s)", (id,group,))
     c.commit()
     c.close
-    print('klaar')
+    print('Inserted')
 
 
 def user_groups(userlist):
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
-    cursor = c.cursor()
+    cur = c.cursor()
     group_dict = {}
     count = 0 #alleen om te kijken hoe snel de tests gaan
     for user in userlist:
         count += 1
-        print('===============================')
-        cursor.execute("""select ppv.profid, ppv.prodid, prof.segment, prod.name, prod.category, prod.targetaudience
+        #print('===============================')
+        print(count)
+        cur.execute("""select ppv.profid, ppv.prodid, prof.segment, prod.name, prod.category, prod.targetaudience
                 from profiles_previously_viewed as ppv inner join profiles as prof on ppv.profid = prof.id inner join products as prod on ppv.prodid = prod.id 
                 where profid =%s
                 order by profid desc,
                 prodid desc """, (user,))
-        table = cursor.fetchall()
+        table = cur.fetchall()
         cat_dict = {}
         target_dict = {}
         for product in table:
             #print('\nProfId = ', product[0],'\nProdId = ', product[1],'\nSegment = ', product[2],'\nNaam = ', product[3],'\nCat = ', product[4],'\nTarget = ', product[5])
-
             target = product[5]
             cat = product[4]
             if target in target_dict:
@@ -82,61 +57,49 @@ def user_groups(userlist):
                     pass  # slaat lege targets en cats over en targets met maar enkele items
                 else:
                     cat_dict[cat] = 1
-        print('targetdict:', target_dict)
-        print('catdict:', cat_dict)
+        #print('targetdict:', target_dict)
+        #print('catdict:', cat_dict)
         if target_dict == {}:
             biggest_target = 'Volwassenen' #standaard, als targetdict leeg is
         else:
             biggest_target = max(target_dict, key=target_dict.get)  # verkrijg meest gekochte target
-        if cat == {}:
-            biggest_target = 'Gezond & verzorging' # standaard (meest gebruikt), als catdict leeg is
+        if cat_dict == {}:
+            biggest_cat = 'Gezond & verzorging' # standaard (meest gebruikt), als catdict leeg is
         else:
             biggest_cat = max(cat_dict, key=cat_dict.get)  # verkrijg meest gekochte category
 
         group = '{}_{}'.format(biggest_target,biggest_cat)
-        print(group)
+        #print(group)
         pgload_group(user,group)
-        """if group in group_dict:
+        if group in group_dict:
             group_dict[group] += 1
         else:
             group_dict[group] = 1
-    print('',group_dict)"""
+    #print('',group_dict)
 
 def userlijst():
     group_tabel()
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
-    cursor = c.cursor()
+    cur = c.cursor()
     userlist = []
-    cursor.execute("""select id from profiles where segment = 'buyer' or segment = 'BUYER' limit 10""")
-    tabel = cursor.fetchall()
+    cur.execute("""select id from profiles where segment = 'buyer' or segment = 'BUYER'""")
+    tabel = cur.fetchall()
     for row in tabel:
         userlist.append(row[0])
     print('lente userlijst:', len(userlist))
-    #print(userlist)
-    #input('doorgaan?')
-
     user_groups(userlist)
 
 userlijst()
 
 
 
-
-
-
-
-
-
-
-
-
-
+"""Alles hieronder was voor het testen"""
 def maak_groepen(): #test functie om groepen te maken
     c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
-    cursor = c.cursor()
+    cur = c.cursor()
     code1 = """select category, targetaudience from products where category != '' and targetaudience != '' AND targetaudience != 'Grootverpakking'AND targetaudience != 'zwangere vrouw'AND targetaudience != 'Unisex'AND targetaudience != '65+'AND targetaudience != 'Baby'AND targetaudience != 'Mannen/vrouwen'AND targetaudience != 'Vrouw'"""
-    cursor.execute(code1)
-    table = cursor.fetchall()
+    cur.execute(code1)
+    table = cur.fetchall()
     catlist = []
     targetlist = []
 
