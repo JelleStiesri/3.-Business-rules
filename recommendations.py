@@ -66,5 +66,3 @@ def menu():
         content()
 
 menu()
-
-
