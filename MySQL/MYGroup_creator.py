@@ -1,37 +1,53 @@
-import psycopg2
+import mysql.connector as mysql
+f = open("password.txt", "r")
+password = f.readline()
+f.close()
+
+mydb = mysql.connect(
+        host="localhost",
+        user="root",
+        passwd=password,
+        database='webshop'
+    )
+mycursor = mydb.cursor()
+
+def test():
+    mycursor.execute("SELECT * FROM brands")
+    table = mycursor.fetchall()
+    print('done')
+    for row in table:
+        print(row)
+
+#test()
+
+
 
 def group_tabel(): #maakt de tabel aan met de users en groepen
-    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
-    cur = c.cursor()
-    cur.execute("DROP TABLE IF EXISTS groepen CASCADE")
-    cur.execute("""CREATE TABLE groepen
-                    (id VARCHAR PRIMARY KEY,
-                     groep VARCHAR);""")
-    c.commit()
+    mycursor.execute("DROP TABLE IF EXISTS groepen CASCADE")
+    mycursor.execute("""CREATE TABLE groepen
+                    (id VARCHAR(255)PRIMARY KEY,
+                     groep VARCHAR(255));""")
+    mydb.commit()
 
 
 def pgload_group(id,group):
-    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
-    cur = c.cursor()
-    cur.execute("insert into groepen values (%s,%s)", (id,group,))
-    c.commit()
+    mycursor.execute("insert into groepen values (%s,%s)", (id,group,))
+    mydb.commit()
     print('Inserted')
 
 def user_groups(userlist):
-    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
-    cur = c.cursor()
     group_dict = {}
     count = 0 #alleen om te kijken hoe snel de tests gaan
     for user in userlist:
         count += 1
         #print('===============================')
         print(count)
-        cur.execute("""select ppv.profid, ppv.prodid, prof.segment, prod.name, prod.category, prod.targetaudience
+        mycursor.execute("""select ppv.profid, ppv.prodid, prof.segment, prod.name, prod.category, prod.targetaudience
                 from profiles_previously_viewed as ppv inner join profiles as prof on ppv.profid = prof.id inner join products as prod on ppv.prodid = prod.id 
                 where profid =%s
                 order by profid desc,
                 prodid desc """, (user,))
-        table = cur.fetchall()
+        table = mycursor.fetchall()
         cat_dict = {}
         target_dict = {}
         for product in table:
@@ -74,11 +90,9 @@ def user_groups(userlist):
 
 def userlijst():
     group_tabel()
-    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
-    cur = c.cursor()
     userlist = []
-    cur.execute("""select id from profiles where segment = 'buyer' or segment = 'BUYER'""")
-    tabel = cur.fetchall()
+    mycursor.execute("""select id from profiles where segment = 'buyer' or segment = 'BUYER'""")
+    tabel = mycursor.fetchall()
     for row in tabel:
         userlist.append(row[0])
     print('lente userlijst:', len(userlist))
@@ -90,11 +104,9 @@ userlijst()
 
 """Alles hieronder was voor het testen"""
 def maak_groepen(): #test functie om groepen te maken
-    c = psycopg2.connect('dbname=Webshopjel user=postgres password=Pindakaas123')
-    cur = c.cursor()
     code1 = """select category, targetaudience from products where category != '' and targetaudience != '' AND targetaudience != 'Grootverpakking'AND targetaudience != 'zwangere vrouw'AND targetaudience != 'Unisex'AND targetaudience != '65+'AND targetaudience != 'Baby'AND targetaudience != 'Mannen/vrouwen'AND targetaudience != 'Vrouw'"""
-    cur.execute(code1)
-    table = cur.fetchall()
+    mycursor.execute(code1)
+    table = mycursor.fetchall()
     catlist = []
     targetlist = []
 
